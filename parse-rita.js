@@ -50,6 +50,7 @@ var enqueue = function(queue, jobName, scalarArgs, objectArgs) {
   job.set('processed', 0);
   job.set('status', 'new');
   job.set('result', '');
+  job.set('ACL', {});
   return job.save(null, { useMasterKey : true }).then(null, createHandler());
 };
 
@@ -89,7 +90,7 @@ var poll = function() {
           return Parse.Promise.as();
         });
       });
-    }).then(function() {
+    }, {useMasterKey:true}).then(function() {
       if (jobCount) {
         return log(
           'Worker cycle completed after ' + jobCount + ' jobs processed',
@@ -149,6 +150,8 @@ var log = function(message, data) {
   var entry = new ResqueLog();
   entry.set('message', message);
   entry.set('data', data);
+  entry.set('ACL', {});
+
   return entry.save(null, {useMasterKey:true});
 };
 
