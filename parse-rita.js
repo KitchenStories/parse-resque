@@ -109,6 +109,8 @@ var perform = function(job) {
       return Parse.Promise.as();
     }
     statusObject.message('Running job ' + job.id);
+    var startTime = Date.now();
+
     var jobName = job.get('jobName');
     if (!jobs[jobName]) {
       return log(
@@ -116,8 +118,9 @@ var perform = function(job) {
         { job : job }
       ).then(function() {
         return job.save({
-          status : 'error',
-          result : 'Undefined jobName'
+          'status' : 'error',
+          'result' : 'Undefined jobName',
+          'elapsedTime' : (Date.now() - startTime)
         }, { useMasterKey : true });
       });
     }
@@ -128,13 +131,15 @@ var perform = function(job) {
       // job completed
       return job.save({
         'status' : 'completed',
-        'result' : JSON.stringify(result)
+        'result' : JSON.stringify(result),
+        'elapsedTime' : (Date.now() - startTime)
       }, { useMasterKey : true });
     }, function (error) {
       // job failed
       return job.save({
         'status' : 'failed',
-        'result' : JSON.stringify(error)
+        'result' : JSON.stringify(error),
+        'elapsedTime' : (Date.now() - startTime)
       }, { useMasterKey : true });
     }).then(timeLimitCheck);
   });
