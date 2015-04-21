@@ -22,5 +22,5 @@ Parse.Cloud.define('makeTestData', function(req, res) {
 });
 
 Parse.Cloud.job('workertest1', function(request, status) {
-  rita.worker(request.params.queues);
+  rita.worker(status, request.params.queues);
 });

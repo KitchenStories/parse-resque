@@ -16,6 +16,7 @@ var queues = [];
 var startTime;
 var delayTime = 15000; // default 15s
 var runTime = 14.5 * 60 * 1000; // default 14m30s
+var statusObject; // the jobs status object, set on execution
 
 var setDelayOnEmptyQueue = function(timeInMs) {
   delayTime = timeInMs;
@@ -52,7 +53,10 @@ var enqueue = function(queue, jobName, scalarArgs, objectArgs) {
   return job.save(null, { useMasterKey : true }).then(null, createHandler());
 };
 
-var worker = function(queuesParam) {
+var worker = function(status, queuesParam) {
+  statusObject = status;
+  status.message('Worker starting.');
+
   startTime = Date.now();
   queues = queuesParam;
 
@@ -104,6 +108,7 @@ var perform = function(job) {
     if (job.get('processed') != 1) {
       return Parse.Promise.as();
     }
+    statusObject.message('Running job ' + job.id);
     var jobName = job.get('jobName');
     if (!jobs[jobName]) {
       return log(
@@ -166,13 +171,11 @@ function timeLimitCheck() {
         tunTime: runTime,
         time: Date.now()
       }
-    ).then(terminate, createHandler());
+    ).then(function () {
+      statusObject.success('Worker exiting after run limit.');
+    });
   }
   return Parse.Promise.as();
-}
-
-function terminate() {
-  process.abort();
 }
 
 function createHandler(response) {
